@@ -59,8 +59,8 @@ async function fetchLastfmPage(page, retries = 3) {
   }
 }
 
-async function sync(page_limit) {
-  console.log("🚀 Iniciando sincronização com Last.fm...");
+async function sync(page_limit = 0) {
+  console.log("🚀 Iniciando sincronização completa com Last.fm...");
   
   let page = 1;
   let totalPages = 1;
@@ -68,7 +68,7 @@ async function sync(page_limit) {
 
   try {
     do {
-      console.log(`📥 Baixando página ${page}...`);
+      console.log(`📥 Baixando página ${page} de ${totalPages || '?' }...`);
       const data = await fetchLastfmPage(page);
       
       totalPages = Number(data["@attr"].totalPages);
@@ -77,21 +77,16 @@ async function sync(page_limit) {
       const insertedInPage = runSyncTransaction(tracks);
       totalInserted += insertedInPage;
 
-      console.log(`✅ Página ${page} processada. (${insertedInPage} novos)`);
+      console.log(`✅ Página ${page} processada. (+${insertedInPage} novos | Total: ${totalInserted})`);
 
-      if (insertedInPage === 0 && page > 1) {
-         console.log("ℹ️ Nenhuma música nova encontrada nesta página. Parando...");
-         break;
-      }
-
-      if (page_limit != 0 && page >= page_limit) break;
+      if (page_limit !== 0 && page >= page_limit) break;
 
       page++;
       await sleep(CONFIG.REQUEST_DELAY);
 
     } while (page <= totalPages);
 
-    console.log(`\n✨ Sync finalizado! ${totalInserted} novos scrobbles adicionados.`);
+    console.log(`\n✨ Sync finalizado! ${totalInserted} novos scrobbles adicionados ao banco.`);
   } catch (err) {
     console.error("\n❌ Falha crítica no sync:", err.message);
   }
