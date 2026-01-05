@@ -4,7 +4,7 @@ mkdir -p /app/data
 [ ! -f /app/data/stats.db ] && touch /app/data/stats.db
 
 echo "🔄 Running initial synchronization..."
-node src/index.js
+node src/initial-sync.js
 
 echo "🚀 Starting services (API + CRON)..."
 pm2 start src/api.js --name "web-api"

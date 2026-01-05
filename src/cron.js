@@ -1,6 +1,7 @@
 require("dotenv").config();
 const cron = require("node-cron");
-const sync = require("./index");
+const { sync } = require("./index");
+
 
 let running = false;
 
