@@ -95,4 +95,4 @@ async function sync(options = {}) {
   console.log("✨ Sync finished");
 }
 
-module.exports = sync;
+module.exports = { sync };
