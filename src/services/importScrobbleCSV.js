@@ -45,6 +45,5 @@ function importScrobbleCSV(buffer, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
-module.exports ={
-  importScrobbleCSV
-}
+
+module.exports = { importScrobbleCSV };
