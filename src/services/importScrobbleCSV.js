@@ -30,7 +30,7 @@ function importScrobbleCSV(buffer, res) {
       .pipe(fastCsv.parse({ headers: true, ignoreEmpty: true }))
       .on("error", (err) => {
         console.error(err);
-        res.status(400).json({ error: "CSV inválido" });
+        res.status(400).json({ error: "Invalid CSV" });
       })
       .on("data", (row) => {
         rows.push(row);
@@ -42,7 +42,7 @@ function importScrobbleCSV(buffer, res) {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro interno do servidor" });
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 module.exports ={
