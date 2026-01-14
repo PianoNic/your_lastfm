@@ -20,9 +20,7 @@ The project is fully containerized with **Docker**, using an automated entrypoin
 * [Docker](https://docs.docker.com/get-docker/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
-## Configuration
-
-## 🐳 Quick start
+## Quick start
 
 ### 1️⃣ Create a `.env` file
 
