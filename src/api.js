@@ -7,7 +7,7 @@ const db = require("./db");
 const multer = require("multer");
 const { getActiveFilter } = require("./utils/filters");
 
-const { buildRangeFilter, fillMissingDates } = require("./utils/dateRange");
+const { fillMissingDates } = require("./utils/dateRange");
 const { ensureAlbumCover } = require("./services/albumCoverCache");
 const { ensureArtistImage } = require("./services/artistImageCache");
 const { importScrobbleCSV } = require("./services/importScrobbleCSV");
@@ -95,7 +95,7 @@ app.get("/api/plays-per-day", (req, res) => {
     ORDER BY day
   `).all(...(filter.params || []));
 
-  const result = req.query.range ? fillMissingDates(rows, req.query.range) : rows;
+  const result = fillMissingDates(rows, req.query.range, req.query.year, req.query.month);
   res.json(result);
 });
 

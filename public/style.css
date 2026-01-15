@@ -580,3 +580,9 @@ strong {
     width: 100%;
   }
 }
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}

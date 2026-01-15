@@ -1,12 +1,13 @@
 import { fetchJSON } from "./api.js";
+import { buildQuery } from "./filters.js";
 
 const state = {
   charts: {}
 };
 
-
 export async function loadChart({ url, canvasId, labelKey, valueKey, label }) {
-  const data = await fetchJSON(url);
+  const queryString = buildQuery();
+  const data = await fetchJSON(`${url}${queryString}`); 
 
   if (state.charts[canvasId]) {
     state.charts[canvasId].destroy();
@@ -25,6 +26,10 @@ export async function loadChart({ url, canvasId, labelKey, valueKey, label }) {
             borderRadius: 6,
             maxBarThickness: 50
           }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     }
   );
