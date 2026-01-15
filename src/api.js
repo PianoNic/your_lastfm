@@ -28,7 +28,8 @@ app.get("/api/top-artists", async (req, res) => {
   try {
     const filter = getActiveFilter(req.query);
 
-    console.log(`[Top Artists] Filter: "${filter.where}" | Params: ${filter.params}`);
+    // Filter  Debug
+    //console.log(`[Top Artists] Filter: "${filter.where}" | Params: ${filter.params}`);
 
     const query = `
       SELECT artist, COUNT(*) plays
