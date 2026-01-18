@@ -1,15 +1,17 @@
 require("dotenv").config();
 const axios = require("axios");
 const db = require("./db");
+const { fetchWithRetry } = require("./utils/fetchRetry");
+const { sanitizeAxiosConfig } = require("./utils/sanitizeAxios");
 
 const CONFIG = {
   API_URL: "https://ws.audioscrobbler.com/2.0/",
-  RETRY_DELAY: 3000,
   REQUEST_DELAY: 300,
   PER_PAGE: 200
 };
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 
 const insertScrobble = db.prepare(`
   INSERT OR IGNORE INTO scrobbles (artist, track, album, played_at)
@@ -37,22 +39,39 @@ const runSyncTransaction = db.transaction((tracks) => {
   return count;
 });
 
-async function fetchLastfmPage(page, retries = 3) {
-  const { data } = await axios.get(CONFIG.API_URL, {
-    timeout: 10000,
-    params: {
-      method: "user.getrecenttracks",
-      user: process.env.LASTFM_USERNAME,
-      api_key: process.env.LASTFM_API_KEY,
-      format: "json",
-      limit: CONFIG.PER_PAGE,
-      page
-    }
-  });
+async function fetchLastfmPage(page) {
+  try {
+    const response = await fetchWithRetry(() =>
+      axios.get(CONFIG.API_URL, {
+        timeout: 10000,
+        params: {
+          method: "user.getrecenttracks",
+          user: process.env.LASTFM_USERNAME,
+          api_key: process.env.LASTFM_API_KEY,
+          format: "json",
+          limit: CONFIG.PER_PAGE,
+          page
+        }
+      })
+    );
 
-  if (data.error) throw new Error(data.message);
-  return data.recenttracks;
+    const data = response.data;
+
+    if (data.error) {
+      throw new Error(`[Last.fm] ${data.message}`);
+    }
+
+    return data.recenttracks;
+
+  } catch (err) {
+    console.error(
+      "[Last.fm sync error]",
+      sanitizeAxiosConfig(err.config)
+    );
+    throw err;
+  }
 }
+
 
 async function sync(options = {}) {
   const isFullSync = options.full === true;

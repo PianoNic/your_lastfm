@@ -1,39 +1,36 @@
 const axios = require("axios");
 require("dotenv").config();
+const { fetchWithRetry } = require("../utils/fetchRetry");
+const { sanitizeAxiosConfig } = require("../utils/sanitizeAxios");
+
 
 const LASTFM_URL = "https://ws.audioscrobbler.com/2.0/";
 
 async function getAlbumImage(artist, album) {
   try {
+    const response = await fetchWithRetry(() =>
+      axios.get(LASTFM_URL, {
+        params: {
+          method: "album.getinfo",
+          api_key: process.env.LASTFM_API_KEY,
+          artist,
+          album,
+          format: "json"
+        }
+      })
+    );
 
-    const { data } = await axios.get(LASTFM_URL, {
-      params: {
-        method: "album.getinfo",
-        api_key: process.env.LASTFM_API_KEY,
-        artist,
-        album,
-        format: "json"
-      }
-    });
-
-    const images = data?.album?.image;
-    if (!images || images.length === 0) {
-      return null;
-    }
+    const images = response.data?.album?.image;
+    if (!images || images.length === 0) return null;
 
     const image = images[images.length - 1]["#text"];
-
-    if (image) {
-      return image;
-    }
-
-    return null;
+    return image || null;
 
   } catch (err) {
-    console.error(`❌ [Last.fm] Error: ${artist} - ${album}`);
-    if (err.response?.data) {
-      console.error(err.response.data);
-    }
+    console.warn(
+      `⚠️ [Last.fm] Album image failed: ${artist} - ${album}`,
+      sanitizeAxiosConfig(err.config)
+    );
     return null;
   }
 }

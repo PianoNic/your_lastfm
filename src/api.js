@@ -16,6 +16,8 @@ const { ensureArtistImage } = require("./services/artistImageCache");
 const { importScrobbleCSV } = require("./services/importScrobbleCSV");
 const { exportScrobbleCSV } = require("./services/exportScrobbleCSV");
 const { ensureTrackDuration } = require("./services/trackDurationCache");
+const { fetchWithRetry } = require("./utils/fetchRetry");
+const { sanitizeAxiosConfig } = require("./utils/sanitizeAxios");
 
 
 const app = express();
@@ -190,16 +192,16 @@ app.get("/api/recent-scrobbles", async (req, res) => {
     const page = Number(req.query.page || 1);
     const limit = 20;
 
-    const response = await axios.get("https://ws.audioscrobbler.com/2.0/", {
-      params: {
+    const response = await fetchWithRetry(() =>
+      axios.get("https://ws.audioscrobbler.com/2.0/", { params: {
         method: "user.getrecenttracks",
         user: process.env.LASTFM_USERNAME,
         api_key: process.env.LASTFM_API_KEY,
         format: "json",
         limit,
         page
-      }
-    });
+      } })
+    );
 
     const recentTracks = response.data?.recenttracks;
     const tracks = recentTracks?.track || [];
@@ -222,7 +224,12 @@ app.get("/api/recent-scrobbles", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("[recent-scrobbles ERROR]", err.response?.data || err.message);
+    console.error("[recent-scrobbles ERROR]", {
+      message: err.message,
+      status: err.response?.status,
+      config: sanitizeAxiosConfig(err.config)
+    });
+
     res.status(500).json({ error: "Failed to fetch recent scrobbles" });
   }
 });
