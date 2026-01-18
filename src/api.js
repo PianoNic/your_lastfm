@@ -3,9 +3,11 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const path = require("path");
-const db = require("./db");
+const crypto = require("crypto");
+const fs = require("fs");
 const multer = require("multer");
 
+const db = require("./db");
 
 const { getActiveFilter } = require("./utils/filters");
 const { fillMissingDates } = require("./utils/dateRange");
@@ -147,6 +149,40 @@ app.get("/api/top-albums", async (req, res) => {
   }
 
   res.json(albums);
+});
+
+app.post("/api/album-cover", upload.single("cover"), (req, res) => {
+  const { artist, album } = req.body;
+
+  if (!artist || !album || !req.file) {
+    return res.status(400).json({ error: "Invalid payload" });
+  }
+
+  const hash = crypto
+    .createHash("sha1")
+    .update(`${artist}::${album}`)
+    .digest("hex");
+
+  const ext = path.extname(req.file.originalname) || ".jpg";
+  const fileName = `${hash}${ext}`;
+
+  const coversDir = path.join(__dirname, "../public/covers/albums");
+  fs.mkdirSync(coversDir, { recursive: true });
+
+  const filePath = path.join(coversDir, fileName);
+  fs.writeFileSync(filePath, req.file.buffer);
+
+  const publicPath = `/covers/albums/${fileName}`;
+
+  db.prepare(`
+    UPDATE scrobbles
+    SET album_image = ?
+    WHERE artist = ? AND album = ?
+  `).run(publicPath, artist, album);
+
+  //console.log(`Manual cover added: ${artist} - ${album}`);
+
+  res.json({ image: publicPath });
 });
 
 app.get("/api/recent-scrobbles", async (req, res) => {

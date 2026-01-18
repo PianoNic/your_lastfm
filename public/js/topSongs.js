@@ -1,4 +1,5 @@
 import { buildQuery } from "./filters.js";
+import { renderCover, initCoverUploads } from "./coverUploader.js";
 
 export async function loadTopSongs() {
   const res = await fetch("/api/top-tracks" + buildQuery());
@@ -12,23 +13,27 @@ export async function loadTopSongs() {
     const seconds = row.total_seconds % 60;
 
     container.innerHTML += `
-        <div class="top-song-row">
-            <span class="song-position">${i + 1}</span>
+      <div class="top-song-row">
+        <span class="song-position">${i + 1}</span>
 
-            <div class="song-main">
-            <img
-                src="${row.album_image || 'https://www.beatstars.com/assets/img/placeholders/playlist-placeholder.svg'}"
-                class="song-cover"
-            />
-            <div>
-                <div class="song-title">${row.track}</div>
-                <div class="song-artist">${row.artist}</div>
-            </div>
-            </div>
+        <div class="song-main">
+          ${renderCover({
+            image: row.album_image,
+            artist: row.artist,
+            album: row.album
+          })}
 
-            <span>${row.plays}</span>
-            <span>${minutes}:${String(seconds).padStart(2, "0")}</span>
+          <div>
+            <div class="song-title">${row.track}</div>
+            <div class="song-artist">${row.artist}</div>
+          </div>
         </div>
+
+        <span>${row.plays}</span>
+        <span>${minutes}:${String(seconds).padStart(2, "0")}</span>
+      </div>
     `;
   });
+
+  initCoverUploads();
 }

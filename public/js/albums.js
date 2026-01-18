@@ -1,5 +1,6 @@
 import { fetchJSON } from "./api.js";
 import { buildQuery } from "./filters.js";
+import { renderCover, initCoverUploads } from "./coverUploader.js";
 
 export async function loadAlbums() {
   const albums = await fetchJSON("/api/top-albums" + buildQuery());
@@ -12,7 +13,12 @@ export async function loadAlbums() {
     div.className = "album-card";
 
     div.innerHTML = `
-      <img src="${a.album_image || 'https://www.beatstars.com/assets/img/placeholders/playlist-placeholder.svg'}">
+      ${renderCover({
+        image: a.album_image,
+        artist: a.artist,
+        album: a.album,
+        size: "large"
+      })}
       <strong>${a.album}</strong>
       <span>${a.artist}</span>
       <small>${a.plays} plays</small>
@@ -20,4 +26,6 @@ export async function loadAlbums() {
 
     grid.appendChild(div);
   }
+
+  initCoverUploads();
 }
